@@ -1,12 +1,12 @@
+import json
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 import torch
-import json
+import streamlit as st
 from sklearn.metrics import ndcg_score, jaccard_score
 import numpy as np
-import streamlit as st
 
 def generate_user_profile(posts):
-    user_text = ' '.join([post["text"] for post in posts])
+    user_text = ' '.join(posts)
     model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
     tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
     inputs = tokenizer.encode(user_text, return_tensors="pt", max_length=1024, truncation=True)
@@ -66,7 +66,6 @@ with open("Reddit_data_test.json", "r") as f:
 users = {user_id: [post["text"] for post in user_posts] for user_id, user_posts in testing_data.items()}
 posts = {post["text"]: post["text"] for user_posts in testing_data.values() for post in user_posts}
 ground_truth = {user_id: [post["dist_from_root"] for post in user_posts] for user_id, user_posts in testing_data.items()}
-
 
 # Streamlit app
 st.title("Reddit Recommendations Evaluation")
