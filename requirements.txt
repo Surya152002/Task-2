@@ -2,4 +2,4 @@ transformers
 torch
 scikit-learn
 numpy
-streamlit
+
