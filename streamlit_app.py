@@ -1,4 +1,4 @@
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 import json
 import torch
 from sklearn.metrics import ndcg_score, jaccard_score
@@ -6,7 +6,7 @@ import numpy as np
 import streamlit as st
 
 # Load the GPT-Neo model and tokenizer
-model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
+model = GPTNeoForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B")
 tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
 
 # Load training and testing data
