@@ -1,38 +1,28 @@
-from transformers import GPTNeoForCausalLM, GPT2Tokenizer
-import json
+from transformers import GPT2Tokenizer, GPT2LMHeadModel
 import torch
+import json
 from sklearn.metrics import ndcg_score, jaccard_score
 import numpy as np
 import streamlit as st
 
-# Load the GPT-Neo model and tokenizer
-model = GPTNeoForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B")
-tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
-
-# Load training and testing data
-with open("Reddit_data_train.json", "r") as f:
-    training_data = json.load(f)
-
-with open("Reddit_data_test.json", "r") as f:
-    testing_data = json.load(f)
-
-# Function to generate user profile based on posts
 def generate_user_profile(posts):
     user_text = ' '.join([post["text"] for post in posts])
+    model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
+    tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
     inputs = tokenizer.encode(user_text, return_tensors="pt", max_length=1024, truncation=True)
     outputs = model.generate(inputs, max_length=100, num_beams=5, no_repeat_ngram_size=2, top_k=50, top_p=0.95, temperature=0.7)
     topics = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return topics[:20]
 
-# Function to generate post topics
 def generate_post_topics(post):
+    model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
+    tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
     inputs = tokenizer.encode(post, return_tensors="pt", max_length=1024, truncation=True)
     outputs = model.generate(inputs, max_length=100, num_beams=5, no_repeat_ngram_size=2, top_k=50, top_p=0.95, temperature=0.7)
     topics = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return topics[:10]
 
-# Function to recommend posts to users
-def recommend_posts(users, posts):
+def recommend_posts(users, posts, ground_truth):
     recommendations = {}
 
     for user_id, user_posts in users.items():
@@ -50,7 +40,6 @@ def recommend_posts(users, posts):
 
     return recommendations
 
-# Function to evaluate recommendations
 def evaluate_recommendations(recommendations, ground_truth):
     predicted_labels = []
     true_labels = []
@@ -66,17 +55,30 @@ def evaluate_recommendations(recommendations, ground_truth):
 
     return ndcg, jaccard
 
-# Extract relevant data from training and testing data
-users = {user_id: [post["text"] for post in user_posts] for user_id, user_posts in testing_data.items()}
-posts = {item['text']: item['text'] for item in training_data}
+# Load training and testing data
+with open("Reddit_data_train.json", "r") as f:
+    training_data = json.load(f)
+
+with open("Reddit_data_test.json", "r") as f:
+    testing_data = json.load(f)
+
+# Extract relevant data
+users = {item['text']: item['GT'] for item in testing_data}
+posts = {item['text']: item['text'] for item in testing_data}
 ground_truth = {item['text']: item['GT'] for item in testing_data}
 
-# Generate recommendations
-recommendations = recommend_posts(users, posts)
+# Streamlit app
+st.title("Reddit Recommendations Evaluation")
+
+# Get user input for user_id
+user_id = st.selectbox("Select a User ID", list(users.keys()))
+
+# Generate recommendations for the selected user
+user_recommendations = recommend_posts({user_id: users[user_id]}, posts, ground_truth)
 
 # Evaluate recommendations
-ndcg, jaccard = evaluate_recommendations(recommendations, ground_truth)
+ndcg, jaccard = evaluate_recommendations(user_recommendations, ground_truth)
 
 # Display results
-print(f"NDCG Score: {ndcg}")
-print(f"Jaccard Similarity Score: {jaccard}")
+st.write(f"NDCG Score: {ndcg}")
+st.write(f"Jaccard Similarity Score: {jaccard}")
