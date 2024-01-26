@@ -63,9 +63,10 @@ with open("Reddit_data_test.json", "r") as f:
     testing_data = json.load(f)
 
 # Extract relevant data
-users = {item['text']: item['GT'] for item in testing_data}
-posts = {item['text']: item['text'] for item in testing_data}
-ground_truth = {item['text']: item['GT'] for item in testing_data}
+users = {user_id: [post["text"] for post in user_posts] for user_id, user_posts in testing_data.items()}
+posts = {post["text"]: post["text"] for user_posts in testing_data.values() for post in user_posts}
+ground_truth = {user_id: [post["dist_from_root"] for post in user_posts] for user_id, user_posts in testing_data.items()}
+
 
 # Streamlit app
 st.title("Reddit Recommendations Evaluation")
