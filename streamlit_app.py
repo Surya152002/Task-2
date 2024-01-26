@@ -1,22 +1,22 @@
-import json
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 import torch
-import streamlit as st
+import json
 from sklearn.metrics import ndcg_score, jaccard_score
 import numpy as np
+import streamlit as st
+
+# Load Generative AI model and tokenizer
+model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
+tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
 
 def generate_user_profile(posts):
     user_text = ' '.join(posts)
-    model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
-    tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
     inputs = tokenizer.encode(user_text, return_tensors="pt", max_length=1024, truncation=True)
     outputs = model.generate(inputs, max_length=100, num_beams=5, no_repeat_ngram_size=2, top_k=50, top_p=0.95, temperature=0.7)
     topics = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return topics[:20]
 
 def generate_post_topics(post):
-    model = GPT2LMHeadModel.from_pretrained("EleutherAI/gpt-neo-2.7B")
-    tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B")
     inputs = tokenizer.encode(post, return_tensors="pt", max_length=1024, truncation=True)
     outputs = model.generate(inputs, max_length=100, num_beams=5, no_repeat_ngram_size=2, top_k=50, top_p=0.95, temperature=0.7)
     topics = tokenizer.decode(outputs[0], skip_special_tokens=True)
