@@ -67,13 +67,18 @@ users = {item['text']: item['GT'] for item in testing_data}
 posts = {item['text']: item['text'] for item in testing_data}
 ground_truth = {item['text']: item['GT'] for item in testing_data}
 
-# Generate recommendations
-recommendations = recommend_posts(users, posts, ground_truth)
-
-# Evaluate recommendations
-ndcg, jaccard = evaluate_recommendations(recommendations, ground_truth)
-
 # Streamlit app
 st.title("Reddit Recommendations Evaluation")
+
+# Get user input for user_id
+user_id = st.selectbox("Select a User ID", list(users.keys()))
+
+# Generate recommendations for the selected user
+user_recommendations = recommend_posts({user_id: users[user_id]}, posts, ground_truth)
+
+# Evaluate recommendations
+ndcg, jaccard = evaluate_recommendations(user_recommendations, ground_truth)
+
+# Display results
 st.write(f"NDCG Score: {ndcg}")
 st.write(f"Jaccard Similarity Score: {jaccard}")
